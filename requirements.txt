@@ -1,0 +1,13 @@
+opencv-python
+numpy
+ultralytics
+torch
+torchvision
+matplotlib
+PyYAML
+pillow
+pandas
+plotly
+fastapi
+uvicorn
+jinja2
