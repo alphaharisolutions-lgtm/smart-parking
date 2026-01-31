@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div id="settings-section" class="content-section active">
+    <div class="card settings-card" style="max-width: 800px; margin: 0 auto;">
+        <div class="card-header">
+            <h2><i class="fas fa-cog"></i> System Settings</h2>
+        </div>
+        <div class="settings-list" style="padding: 1rem;">
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h4>AI Sensitivity</h4>
+                    <p>Adjust confidence threshold for object detection</p>
+                </div>
+                <input type="range" id="ai-sensitivity" min="10" max="90" value="20" style="width: 200px;">
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h4>Dark Mode</h4>
+                    <p>Switch between light and dark themes</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="dark-mode" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h4>Notification Alerts</h4>
+                    <p>Receive alerts when slots are full</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="notifications-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <h4>Source Priority</h4>
+                    <p>Default source on startup</p>
+                </div>
+                <select id="source-priority" class="source-select" style="width: 150px;">
+                    <option value="video">Video Feed</option>
+                    <option value="webcam">Webcam</option>
+                </select>
+            </div>
+        </div>
+        <div style="padding: 1.5rem; text-align: right;">
+            <button id="save-settings-btn" class="btn-primary"
+                style="background: var(--primary); color: white; border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">Save
+                Changes</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

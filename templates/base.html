@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALPHA | {% block title %}Smart Parking{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/style.css?v=2.0.1">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon"><i class="fas fa-parking"></i></div>
+                <div class="logo-text">ALPHA<span>PARKING</span></div>
+            </div>
+            <div class="project-title-sidebar">
+                Parking space occupancy detection using YOLO and multiple-view analysis
+            </div>
+
+            <nav class="nav-menu">
+                <a href="/" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-chart-line"></i> Dashboard
+                </a>
+                <a href="/feeds" class="nav-item {% if active_page == 'feeds' %}active{% endif %}">
+                    <i class="fas fa-video"></i> Live Feeds
+                </a>
+                <a href="/analytics" class="nav-item {% if active_page == 'analytics' %}active{% endif %}">
+                    <i class="fas fa-history"></i> Analytics
+                </a>
+                <a href="/settings" class="nav-item {% if active_page == 'settings' %}active{% endif %}">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+            </nav>
+
+            <div class="system-status">
+                <div class="status-indicator">
+                    <div class="pulse-dot"></div>
+                    <span>SYSTEM ONLINE</span>
+                </div>
+                <p>YOLOv8s Engine - AI Active</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search slots, reports, or history...">
+                </div>
+                <div class="user-profile">
+                    <div class="notifications"><i class="far fa-bell"></i><span class="badge"></span></div>
+                    <div class="profile-info">
+                        <img src="https://ui-avatars.com/api/?name=Admin&background=4f46e5&color=fff" alt="User">
+                        <span>System Admin</span>
+                    </div>
+                </div>
+            </header>
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script src="/static/script.js?v=1.0.2"></script>
+</body>
+
+</html>

@@ -12,7 +12,7 @@ def main():
                         help="Path to the video file or camera index")
     parser.add_argument("--slots", type=str, default="data/slots.json",
                         help="Path to save/load parking slots JSON")
-    parser.add_argument("--model", type=str, default="yolov8n.pt",
+    parser.add_argument("--model", type=str, default="yolov8s.pt",
                         help="YOLO model path")
 
     args = parser.parse_args()

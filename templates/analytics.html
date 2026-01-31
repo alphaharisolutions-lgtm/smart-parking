@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics{% endblock %}
+
+{% block content %}
+<div id="analytics-section" class="content-section active">
+    <div class="analytics-grid">
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-clock"></i> Peak Hours</h2>
+            </div>
+            <div class="placeholder-chart">
+                <i class="fas fa-chart-bar"></i>
+                <p>Loading Historical Data...</p>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-file-invoice"></i> Weekly Reports</h2>
+            </div>
+            <div class="report-list" style="padding: 1rem;">
+                <div class="report-item"><i class="fas fa-file-pdf"></i> Jan 24 - Jan 30 Repo.pdf</div>
+                <div class="report-item"><i class="fas fa-file-pdf"></i> Jan 17 - Jan 23 Repo.pdf</div>
+                <div class="report-item"><i class="fas fa-file-pdf"></i> Jan 10 - Jan 16 Repo.pdf</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -29,7 +29,10 @@ class SlotSelector:
 
         self.initialized = True
         self.window_name = "Parking Slot Selector - Click 4 points per slot (Right click to reset current, 's' to save, 'q' to quit)"
-        cv2.namedWindow(self.window_name)
+        cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
+        # Maximize the window automatically
+        cv2.setWindowProperty(self.window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        cv2.setWindowProperty(self.window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_NORMAL) # Toggle back to normal but maximized
         cv2.setMouseCallback(self.window_name, self.mouse_callback)
 
     def mouse_callback(self, event, x, y, flags, param):

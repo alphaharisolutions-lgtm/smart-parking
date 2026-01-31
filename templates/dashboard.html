@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div id="dashboard-section" class="content-section active">
+    <div class="dashboard-grid">
+        <!-- Metrics Row -->
+        <div class="metrics-row">
+            <div class="metric-card card-total">
+                <div class="card-icon"><i class="fas fa-parking"></i></div>
+                <div class="card-info">
+                    <h3>Total Capacity</h3>
+                    <div class="value" id="capacity-val">0</div>
+                </div>
+            </div>
+            <div class="metric-card card-occupied">
+                <div class="card-icon"><i class="fas fa-car"></i></div>
+                <div class="card-info">
+                    <h3>Occupied</h3>
+                    <div class="value" id="occupied-val">0</div>
+                </div>
+            </div>
+            <div class="metric-card card-available">
+                <div class="card-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="card-info">
+                    <h3>Available</h3>
+                    <div class="value" id="available-val">0</div>
+                </div>
+            </div>
+            <div class="metric-card card-utilization">
+                <div class="card-icon"><i class="fas fa-bolt"></i></div>
+                <div class="card-info">
+                    <h3>Utilization</h3>
+                    <div class="value" id="utilization-val">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Feed & Analytics Summary -->
+        <div class="content-row">
+            <div class="feed-container card">
+                <div class="card-header">
+                    <h2><i class="fas fa-broadcast-tower"></i> Live AI Analytics</h2>
+                    <div class="feed-controls">
+                        <select id="source-selector" class="source-select">
+                            <option value="video">Video Feed</option>
+                            <option value="webcam">Webcam</option>
+                        </select>
+                        <span class="badge-live">LIVE</span>
+                    </div>
+                </div>
+                <div class="video-wrapper">
+                    <img id="video-feed" src="/video_feed" alt="Live Feed">
+                </div>
+            </div>
+
+            <div class="stats-container card">
+                <div class="card-header">
+                    <h2><i class="fas fa-chart-area"></i> Occupancy Trend</h2>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="occupancyChart"></canvas>
+                </div>
+
+                <div class="slot-list-container">
+                    <div class="card-header">
+                        <h2><i class="fas fa-list-ul"></i> Quick Logs</h2>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="slot-table">
+                            <thead>
+                                <tr>
+                                    <th>Slot ID</th>
+                                    <th>Status</th>
+                                    <th>Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody id="slot-logs">
+                                <!-- Dynamic Content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
