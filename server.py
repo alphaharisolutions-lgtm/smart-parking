@@ -30,83 +30,59 @@ DETECTION_MODE = "all" # Options: "vehicles" or "all"
 VEHICLE_IDS = list(range(80)) if DETECTION_MODE == "all" else [2, 3, 5, 7, 1, 6, 8, 0] 
 
 # Global State
-class ParkingSystem:
-    def __init__(self):
-        self.model = YOLO(MODEL_PATH)
-        self.source_type = "video"
-        self.slots = self.load_slots(self.source_type)
-        self.cap = cv2.VideoCapture(VIDEO_SOURCE)
-        self.lock = threading.Lock()
-        self.latest_frame = None
-        self.stats = self.get_initial_stats()
+class Camera:
+    def __init__(self, id, source, slots_path):
+        self.id = id
+        self.source = source
+        self.slots_path = slots_path
+        self.cap = cv2.VideoCapture(source)
+        self.slots = self.load_slots()
         self.slot_start_times = [None] * len(self.slots)
-        self.vehicle_ids = VEHICLE_IDS
-        self.running = True
-        self.thread = threading.Thread(target=self.update_loop, daemon=True)
-        self.thread.start()
+        self.occupancy = [False] * len(self.slots)
 
-    def load_slots(self, source_type):
-        path = VIDEO_SLOTS_PATH if source_type == "video" else WEBCAM_SLOTS_PATH
-        # Fallback to data/slots.json if the specific file doesn't exist
-        if not os.path.exists(path) and os.path.exists("data/slots.json"):
-            print(f"DEBUG: {path} not found, falling back to data/slots.json")
-            path = "data/slots.json"
-            
-        if os.path.exists(path):
-            with open(path, 'r') as f:
+    def load_slots(self):
+        if os.path.exists(self.slots_path):
+            with open(self.slots_path, 'r') as f:
                 try:
                     return json.load(f)
                 except:
                     return []
         return []
 
+    def get_frame(self):
+        if self.cap and self.cap.isOpened():
+            ret, frame = self.cap.read()
+            if not ret:
+                self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                return self.get_frame()
+            return frame
+        return None
+
+class ParkingSystem:
+    def __init__(self):
+        self.model = YOLO(MODEL_PATH)
+        self.cameras = [
+            Camera(1, "data/parking_video_1.mp4", "data/slots_video_1.json"),
+            Camera(2, "data/parking_video_2.mp4", "data/slots_video_2.json")
+        ]
+        self.lock = threading.Lock()
+        self.latest_frame = None
+        self.stats = self.get_initial_stats()
+        self.running = True
+        self.thread = threading.Thread(target=self.update_loop, daemon=True)
+        self.thread.start()
+
     def get_initial_stats(self):
+        total_slots = sum(len(c.slots) for c in self.cameras)
         return {
-            "total": len(self.slots),
+            "total": total_slots,
             "occupied": 0,
-            "vacant": len(self.slots),
+            "vacant": total_slots,
             "utilization": 0,
-            "slots": [False] * len(self.slots),
-            "durations": ["0m"] * len(self.slots),
-            "source": self.source_type
+            "slots": [],  # aggregated or list of lists? prefer flattened for stats
+            "durations": [], 
+            "source": "multi-view"
         }
-
-    def switch_source(self, source_type: str):
-        if source_type == self.source_type:
-            return
-        
-        print(f"DEBUG: Receiving switch request to: {source_type}")
-        new_cap = None
-        
-        # Initialize new capture outside the main lock
-        if source_type == "webcam":
-            print("DEBUG: Attempting to open Webcam (Index 0) using DSHOW...")
-            new_cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-            if not new_cap.isOpened():
-                print("DEBUG: Index 0 failed, trying Index 1...")
-                new_cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
-        else:
-            print("DEBUG: Loading video file...")
-            new_cap = cv2.VideoCapture(VIDEO_SOURCE)
-
-        # Swap the captures inside the lock
-        with self.lock:
-            if new_cap and new_cap.isOpened():
-                if self.cap:
-                    self.cap.release()
-                self.cap = new_cap
-                self.source_type = source_type
-                
-                # Update slots for the new source
-                self.slots = self.load_slots(source_type)
-                self.slot_start_times = [None] * len(self.slots)
-                self.stats = self.get_initial_stats()
-                
-                print(f"SUCCESS: Switched to {source_type.upper()}. Slots updated to {len(self.slots)} items.")
-            else:
-                print(f"ERROR: Could not open {source_type}. Keeping current source.")
-                if new_cap:
-                    new_cap.release()
 
     def update_settings(self, sensitivity: float):
         global CONF_THRESHOLD
@@ -116,129 +92,118 @@ class ParkingSystem:
 
     def update_loop(self):
         while self.running:
-            frame = None
-            with self.lock:
-                if self.cap and self.cap.isOpened():
-                    try:
-                        ret, frame = self.cap.read()
-                        if not ret or frame is None:
-                            if self.source_type == "video":
-                                self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
-                            else:
-                                # For webcam, a failed read might be temporary
-                                time.sleep(0.1)
-                            continue
-                    except Exception as e:
-                        print(f"DEBUG: Error reading frame: {e}")
-                        time.sleep(0.1)
-                        continue
+            frames = []
+            
+            # 1. Capture & Process Each Camera
+            for cam in self.cameras:
+                frame = cam.get_frame()
+                if frame is None:
+                    # Placeholder if cam fails
+                    frame = np.zeros((480, 640, 3), dtype=np.uint8)
+                    cv2.putText(frame, f"CAM {cam.id} LOST", (50, 240), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
+                
+                # AI Inference
+                try:
+                    results = self.model(frame, verbose=False, conf=CONF_THRESHOLD)[0]
+                    detections = []
+                    for r in results.boxes.data.tolist():
+                        if int(r[5]) in VEHICLE_IDS:
+                            detections.append(r)
+                except Exception as e:
+                    print(f"DEBUG: AI Error Cam {cam.id}: {e}")
+                    detections = []
 
-            if frame is None:
-                time.sleep(0.1)
-                continue
+                # Check Occupancy
+                current_occupancy = [False] * len(cam.slots)
+                for i, slot in enumerate(cam.slots):
+                    poly = np.array(slot, np.int32)
+                    for d in detections:
+                        cx, cy = (d[0]+d[2])/2, (d[1]+d[3])/2
+                        if cv2.pointPolygonTest(poly, (cx, cy), False) >= 0:
+                            current_occupancy[i] = True
+                            break
+                    
+                    # Update durations
+                    if current_occupancy[i]:
+                        if cam.slot_start_times[i] is None:
+                            cam.slot_start_times[i] = time.time()
+                    else:
+                        cam.slot_start_times[i] = None
+                
+                cam.occupancy = current_occupancy
 
-            # AI Inference
-            try:
-                results = self.model(frame, verbose=False, conf=CONF_THRESHOLD)[0]
-            except Exception as e:
-                print(f"DEBUG: AI Inference Error: {e}")
-                time.sleep(0.1)
-                continue
-            detections = []
-            for r in results.boxes.data.tolist():
-                if int(r[5]) in self.vehicle_ids:
-                    detections.append(r)
-
-            current_occupancy = [False] * len(self.slots)
-            for i, slot in enumerate(self.slots):
-                poly = np.array(slot, np.int32)
+                # Visualization
+                viz_frame = frame.copy()
+                class_names = self.model.names
+                
+                # Draw Boxes
                 for d in detections:
-                    cx, cy = (d[0]+d[2])/2, (d[1]+d[3])/2
-                    if cv2.pointPolygonTest(poly, (cx, cy), False) >= 0:
-                        current_occupancy[i] = True
-                        break
+                    x1, y1, x2, y2 = map(int, d[:4])
+                    conf = d[4]
+                    cls_id = int(d[5])
+                    label = f"{class_names[cls_id].upper()} {conf:.2f}"
+                    cv2.rectangle(viz_frame, (x1, y1), (x2, y2), (255, 255, 0), 2)
                 
-                # Update durations
-                if current_occupancy[i]:
-                    if self.slot_start_times[i] is None:
-                        self.slot_start_times[i] = time.time()
-                else:
-                    self.slot_start_times[i] = None
+                # Draw Slots
+                for i, slot in enumerate(cam.slots):
+                    is_occupied = current_occupancy[i]
+                    color = (0, 0, 255) if is_occupied else (0, 255, 0)
+                    cv2.polylines(viz_frame, [np.array(slot, np.int32)], True, color, 2)
+                    
+                    # Label Slot
+                    M = cv2.moments(np.array(slot, np.int32))
+                    if M["m00"] != 0:
+                        cX = int(M["m10"] / M["m00"])
+                        cY = int(M["m01"] / M["m00"])
+                        cv2.putText(viz_frame, str(i+1), (cX-10, cY+5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
 
-            # Calculate Stats
-            occ_count = sum(current_occupancy)
-            vac_count = len(self.slots) - occ_count
-            util = (occ_count / len(self.slots) * 100) if self.slots else 0
+                frames.append(viz_frame)
+
+            # 2. Stitch Frames (Two feeds side-by-side)
+            if frames:
+                # Resize to same height if needed
+                h1, w1 = frames[0].shape[:2]
+                h2, w2 = frames[1].shape[:2]
+                
+                target_h = min(h1, h2)
+                if h1 != target_h:
+                    frames[0] = cv2.resize(frames[0], (int(w1 * target_h / h1), target_h))
+                if h2 != target_h:
+                    frames[1] = cv2.resize(frames[1], (int(w2 * target_h / h2), target_h))
+                
+                combined_frame = np.hstack(frames)
+                
+                # Add titles
+                cv2.putText(combined_frame, "CAM 1: VIEW A", (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+                cv2.putText(combined_frame, "CAM 2: VIEW B", (frames[0].shape[1] + 20, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+
+                _, buffer = cv2.imencode('.jpg', combined_frame)
+                self.latest_frame = buffer.tobytes()
+
+            # 3. Aggregate Stats
+            total = sum(len(c.slots) for c in self.cameras)
+            occupied = sum(sum(c.occupancy) for c in self.cameras)
+            vacant = total - occupied
+            utilization = (occupied / total * 100) if total > 0 else 0
             
-            durations = []
-            for t in self.slot_start_times:
-                if t:
-                    mins = int((time.time() - t) / 60)
-                    durations.append(f"{mins}m")
-                else:
-                    durations.append("0m")
-
+            # Flattened durations for UI
+            all_durations = []
+            for cam in self.cameras:
+                for t in cam.slot_start_times:
+                   if t:
+                       all_durations.append(f"{int((time.time()-t)/60)}m")
+                   else:
+                       all_durations.append("0m")
+            
             self.stats = {
-                "total": len(self.slots),
-                "occupied": occ_count,
-                "vacant": vac_count,
-                "utilization": util,
-                "slots": current_occupancy,
-                "durations": durations,
-                "source": self.source_type
+                "total": total,
+                "occupied": occupied,
+                "vacant": vacant,
+                "utilization": utilization,
+                "slots": [s for c in self.cameras for s in c.occupancy],
+                "durations": all_durations,
+                "source": "multi-view"
             }
-
-            # Visualization
-            viz_frame = frame.copy()
-            
-            # Get class names from model
-            class_names = self.model.names
-
-            # Draw AI Detections (Debugging)
-            for d in detections:
-                x1, y1, x2, y2 = map(int, d[:4])
-                conf = d[4]
-                cls_id = int(d[5])
-                label = f"{class_names[cls_id].upper()} {conf:.2f}"
-                
-                # Draw Box
-                cv2.rectangle(viz_frame, (x1, y1), (x2, y2), (255, 255, 0), 2)
-                
-                # Draw Label Background
-                (w, h), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
-                cv2.rectangle(viz_frame, (x1, y1 - 20), (x1 + w, y1), (255, 255, 0), -1)
-                cv2.putText(viz_frame, label, (x1, y1 - 5), 
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
-
-            # Only draw slots if they exist
-            for i, slot in enumerate(self.slots):
-                is_occupied = current_occupancy[i]
-                color = (75, 75, 255) if is_occupied else (127, 255, 0) # BGR
-                alpha = 0.3 if is_occupied else 0.15
-                
-                overlay = viz_frame.copy()
-                cv2.fillPoly(overlay, [np.array(slot, np.int32)], color)
-                cv2.addWeighted(overlay, alpha, viz_frame, 1 - alpha, 0, viz_frame)
-                cv2.polylines(viz_frame, [np.array(slot, np.int32)], True, color, 2)
-                
-                # Label Slot Status
-                M = cv2.moments(np.array(slot, np.int32))
-                if M["m00"] != 0:
-                    cX = int(M["m10"] / M["m00"])
-                    cY = int(M["m01"] / M["m00"])
-                    
-                    # Slot Number
-                    cv2.putText(viz_frame, str(i+1), (cX-10, cY+5), 
-                               cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
-                    
-                    # Status Text below number
-                    status_text = "OCCUPIED" if is_occupied else "VACANT"
-                    cv2.putText(viz_frame, status_text, (cX-30, cY+25), 
-                               cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
-
-
-            _, buffer = cv2.imencode('.jpg', viz_frame)
-            self.latest_frame = buffer.tobytes()
             
             time.sleep(0.01)
 
@@ -276,10 +241,7 @@ async def get_stats():
 
 @app.post("/switch_source")
 async def switch_source(request: Request):
-    data = await request.json()
-    source = data.get("source", "video")
-    parking_system.switch_source(source)
-    return {"status": "success", "source": source}
+    return {"status": "info", "message": "Source switching disabled in Multi-View mode"}
 
 @app.post("/save_settings")
 async def save_settings(request: Request):
