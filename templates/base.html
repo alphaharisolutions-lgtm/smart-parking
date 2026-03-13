@@ -25,36 +25,43 @@
             </div>
 
             <nav class="nav-menu">
-                <a href="/" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
-                    <i class="fas fa-chart-line"></i> Dashboard
-                </a>
-                <a href="/feeds" class="nav-item {% if active_page == 'feeds' %}active{% endif %}">
-                    <i class="fas fa-video"></i> Live Feeds
-                </a>
-                <a href="/analytics" class="nav-item {% if active_page == 'analytics' %}active{% endif %}">
-                    <i class="fas fa-history"></i> Analytics
-                </a>
-                <a href="/settings" class="nav-item {% if active_page == 'settings' %}active{% endif %}">
-                    <i class="fas fa-cog"></i> Settings
+                <a href="/" class="nav-item active">
+                    <i class="fas fa-desktop"></i> Single View Console
                 </a>
             </nav>
 
             <div class="system-status">
                 <div class="status-indicator">
                     <div class="pulse-dot"></div>
-                    <span>SYSTEM ONLINE</span>
+                    <span>AI LIVE</span>
                 </div>
-                <p>YOLOv8s Engine - AI Active</p>
+                <p id="system-model-label">YOLOv8s Engine - Active</p>
             </div>
         </aside>
 
         <!-- Main Content -->
         <main class="main-content">
             <header class="top-header">
-                <div class="search-bar">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Search slots, reports, or history...">
+                <div class="model-selection-header">
+                    <div class="selector-group">
+                        <label for="ai-model-selector">Object Detection Model:</label>
+                        <select id="ai-model-selector" class="model-dropdown">
+                            <option value="yolo" selected>YOLOv8 (Recommended)</option>
+                            <option value="ssd">SSD (Single Shot Detector)</option>
+                        </select>
+                    </div>
                 </div>
+                
+                <div class="accuracy-showcase">
+                    <div class="accuracy-metric">
+                        <span class="label">Detection Accuracy:</span>
+                        <span id="accuracy-value" class="value high">89%</span>
+                    </div>
+                    <div id="best-model-badge" class="best-model-tag">
+                        <i class="fas fa-crown"></i> BEST MODEL
+                    </div>
+                </div>
+
                 <div class="user-profile">
                     <div class="notifications"><i class="far fa-bell"></i><span class="badge"></span></div>
                     <div class="profile-info">

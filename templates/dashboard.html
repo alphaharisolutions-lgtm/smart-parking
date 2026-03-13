@@ -43,6 +43,13 @@
                 <div class="card-header">
                     <h2><i class="fas fa-broadcast-tower"></i> Live AI Analytics</h2>
                     <div class="feed-controls">
+                        <button id="upload-video-btn" class="btn-action">
+                            <i class="fas fa-upload"></i> Upload Video
+                        </button>
+                        <input type="file" id="video-file-input" accept="video/*" style="display: none;">
+                        <button id="auto-detect-btn" class="btn-action">
+                            <i class="fas fa-magic"></i> Auto-Detect Slots
+                        </button>
                         <select id="source-selector" class="source-select">
                             <option value="video">Video Feed</option>
                             <option value="webcam">Webcam</option>
@@ -57,6 +64,24 @@
 
             <div class="stats-container card">
                 <div class="card-header">
+                    <h2><i class="fas fa-microchip"></i> Model Intelligence</h2>
+                </div>
+                <div class="model-info-content">
+                    <div class="model-stat-item">
+                        <span class="label">Inference Speed:</span>
+                        <span class="value" id="inference-speed">12ms</span>
+                    </div>
+                    <div class="model-stat-item">
+                        <span class="label">Detection Type:</span>
+                        <span class="value">Real-time / Neural</span>
+                    </div>
+                    <div class="model-comparison-note">
+                        <p id="model-comparison-text">YOLOv8s is currently providing <b>sub-20ms</b> latency with
+                            unmatched precision for small vehicle detection.</p>
+                    </div>
+                </div>
+
+                <div class="card-header" style="margin-top: 1.5rem;">
                     <h2><i class="fas fa-chart-area"></i> Occupancy Trend</h2>
                 </div>
                 <div class="chart-wrapper">

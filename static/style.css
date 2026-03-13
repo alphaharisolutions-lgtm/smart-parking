@@ -191,9 +191,14 @@ body {
 
 .top-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 2rem;
     margin-bottom: 2rem;
+    padding: 0 0.5rem;
+}
+
+.model-selection-header {
+    margin-right: auto;
 }
 
 .search-bar {
@@ -215,6 +220,93 @@ body {
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--text-main);
+}
+
+/* Model Selector & Accuracy */
+.model-selection-header {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    padding: 10px 20px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+}
+
+.selector-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.selector-group label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.model-dropdown {
+    border: none;
+    background: #f1f5f9;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--primary);
+    cursor: pointer;
+    outline: none;
+}
+
+.accuracy-showcase {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    padding: 8px 20px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+}
+
+.accuracy-metric {
+    display: flex;
+    flex-direction: column;
+}
+
+.accuracy-metric .label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.accuracy-metric .value {
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+.accuracy-metric .value.high {
+    color: var(--success);
+}
+
+.accuracy-metric .value.low {
+    color: var(--warning);
+}
+
+.best-model-tag {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.best-model-tag.hidden {
+    display: none;
 }
 
 .user-profile {
@@ -462,32 +554,43 @@ td {
     gap: 1.25rem;
 }
 
-.cam-label {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(0, 0, 0, 0.6);
-    color: white;
-    padding: 6px 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    backdrop-filter: blur(4px);
+/* Model Info Card */
+.model-info-content {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px dashed var(--border-color);
 }
 
-.placeholder-feed {
-    height: 100%;
-    background: #1e293b;
+.model-stat-item {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #475569;
+    justify-content: space-between;
+    margin-bottom: 8px;
 }
 
-.placeholder-feed i {
-    font-size: 2.5rem;
-    margin-bottom: 0.75rem;
+.model-stat-item .label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.model-stat-item .value {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.model-comparison-note {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+}
+
+.model-comparison-note b {
+    color: var(--success);
 }
 
 /* Analytics & Settings */
@@ -609,6 +712,48 @@ input:checked+.slider:before {
 
 .btn-primary:hover {
     background: var(--primary-hover);
+}
+
+.btn-action {
+    background: #f1f5f9;
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-action:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-action i {
+    color: var(--primary);
+}
+
+.btn-action.scanning {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    cursor: not-allowed;
+}
+
+.btn-action.scanning i {
+    color: white;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 /* Transitions */
